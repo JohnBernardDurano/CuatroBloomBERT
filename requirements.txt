@@ -1,0 +1,12 @@
+transformers
+torch
+scikit-learn
+pandas
+seaborn
+matplotlib
+imblearn
+gensim
+spacy
+nlpaug
+tqdm
+nltk

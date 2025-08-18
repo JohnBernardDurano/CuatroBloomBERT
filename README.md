@@ -4,8 +4,6 @@ BloomBERT is a transformer-based NLP task classifier based on the [revised editi
 
 Bloom's Taxonomy is a set of hierarchical models used in classifying learning outcomes into levels of complexity and specificity. Although mostly employed by educators for curriculum and assessment structuring, BloomBERT takes a novel approach in differentiating the difficulty of a task through `classifying productivity related tasks` into the cognitive domain of the taxonomy.
 
-> BloomBERT can be accessed via an API endpoint or a [web application](https://bloombert.herokuapp.com/)
-
 #### Example Outputs:
 
 | Task Description                                                | BloomBERT Classification |
@@ -22,10 +20,9 @@ Bloom's Taxonomy is a set of hierarchical models used in classifying learning ou
 
 ## Model Overview
 
-BloomBERT was built by fine-tuning a [DistilBERT](https://arxiv.org/abs/1910.01108) model, a lighter version of the original BERT transformer language model
+BloomBERT was built by finetuning a [DistilBERT](https://arxiv.org/abs/1910.01108) model, a lighter version of the original BERT transformer language model
 developed by Google. It was developed using `Tensorflow` and the `Hugging Face Transformers library`, 
-incorporating a sequence classification head (linear layer) on top of the DistilBERT pooled outputs.
-Utilising the pre-trained DistilBERT model, BloomBERT was trained with a labelled data set curated for the specific task classification on `Google Colab`.
+incorporating a sequence classification head (linear layers with dropout) on top of the DistilBERT pooled outputs. Utilising the pre-trained DistilBERT model, BloomBERT was trained with a labelled data set curated for the specific task classification on `Google Colab`.
 
 
 #### Training Data Distribution:
@@ -39,81 +36,36 @@ Utilising the pre-trained DistilBERT model, BloomBERT was trained with a labelle
 | Remember      | 1532  |
 | Total         | 6175  |
 
+The training dataset has been curated from several sources alongside with some additional productivity-related tasks included by me.
+
+#### Dataset references
+```text
+1. Devane et al.
+https://www.kaggle.com/datasets/vijaydevane/blooms-taxonomy-dataset/data
+2. Mohammed et al. (2020) 
+https://doi.org/10.1371/journal.pone.0230442.s001
+3. Yahya et al. (2012)
+https://doi.org/10.1371/journal.pone.0230442.s002
+```
+
+
+#### BloomBERT Performance Evaluation
+
 ```text
 Training Results:
-    EPOCH: 40 
-    training accuracy: 0.9820
-    validation accuracy: 0.9109
+    EPOCH: 50 
+    training accuracy: 0.9862
+    validation accuracy: 0.9036
 ```
 
-## Deployment Architecture
+> We evaluate `BloomBERT` based on a train-test split ratio of 0.2 to obtain the following results after finetuning for 50 epochs
 
-### Overview:
-![BloomBERT Deployment Architecture](images/Deployment_Architecture.jpg)
+<img src="images/confusion_matrix.png" width="650">
 
+<img src="images/train_val_curve.png" width="650">
 
-### Frontend:
+By gradually unfreezing and finetuning the layers of the DistilBERT model, we achieve a smooth training and validation curve, with consistent increase in both training and validation accuracy, indicating potential room for further improvements.
 
-<img align="left" width="35px" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/heroku/heroku-original.svg" style="padding-right:10px;" />
-<img align="left" width="35px" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" style="padding-right:10px;" />
-<img align="left" width="35px" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original-wordmark.svg" style="padding-right:10px;" />
-
-<br />
-<br />
-
-Developed using [Streamlit](https://streamlit.io/) with Python and hosted on Heroku servers through GitHub. <br> Frontend repository is available [here](https://github.com/RyanLauQF/bloombert-frontend).
-
-### Backend:
-
-<img align="left" width="35px" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/googlecloud/googlecloud-original.svg" style="padding-right:10px;" />
-<img align="left" width="35px" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-plain.svg" style="padding-right:10px;" />
-<img align="left" width="35px" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/fastapi/fastapi-original.svg" style="padding-right:10px;" />
-<img align="left" width="35px" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" style="padding-right:10px;" />
-<img align="left" width="35px" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jupyter/jupyter-original-wordmark.svg" style="padding-right:10px;" />
-<img align="left" width="35px" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tensorflow/tensorflow-original.svg" style="padding-right:10px;" />
-
-<br />
-<br />
-
-Developed using Python to implement FastAPI endpoints. Model was trained using Jupyter Notebook and Tensorflow libraries. Docker used to containerise the application for deployment onto Google Cloud Run.
-
-## FastAPI Endpoints
-
-> The API endpoints are currently deployed on Google Cloud.<br>Note some time may be required for the instance to start up.
-
-#### Request:
-`GET` https://bloom-bert-api-dmkyqqzsta-as.a.run.app
-
-#### Response:
-```json
-{
-  "health_check": "OK", 
-  "model_version": "1.0"
-}
-```
-
-#### Request:
-`POST` https://bloom-bert-api-dmkyqqzsta-as.a.run.app/predict
-```json
-{
-  "text": "Annotating key points in meeting minutes"
-}
-```
-
-#### Response:
-```json
-{
-  "blooms_level": "Understand",
-  "probabilities": {
-    "Analyse": 0.00078,
-    "Apply": 0.00075,
-    "Create": 0.00054,
-    "Evaluate": 0.00051,
-    "Remember": 0.00261,
-    "Understand": 0.99481
-    }
-}
-```
 
 ## Development Journey
 
@@ -128,13 +80,13 @@ Developed using Python to implement FastAPI endpoints. Model was trained using J
 
 | Model                    | NB (TF) | NB (TF+SM) | SVC (TF) | SVC (TF+SM) | SVC (w2v+sp) | DistilBERT | 
 |--------------------------|:-------:|:----------:|:--------:|:-----------:|:------------:|:----------:|
-| Validation <br> Accuracy | 0.77328 |  0.81538   | 0.86721  |   0.88421   |   0.81296    |  0.91090   |
+| Validation <br> Accuracy | 0.7579 |  0.8267   | 0.8599  |   0.8713   |   0.8170    |  0.9036   |
 
 ### 1. Naive-Bayes (TF-IDF Vectorizer)
 * Starting with the Naive-Bayes algorithm that is often employed for multiclass classification problems, 
 this model was used as a performance benchmark against other models.
 ```text
-Validation Accuracy: 0.77328
+Validation Accuracy: 0.7579
 ```
 
 ### 2. Naive-Bayes (TF-IDF Vectorizer + SMOTE)
@@ -142,7 +94,7 @@ Validation Accuracy: 0.77328
 in attempts to oversample minority data points to create a balanced dataset and achieve better classification results.
 * Using SMOTE successfully improved classification accuracy of the Naive-Bayes Model
 ```text
-Validation Accuracy: 0.81538
+Validation Accuracy: 0.8267
 ```
 
 ### 3. SVC (TF-IDF Vectorizer)
@@ -150,14 +102,14 @@ Validation Accuracy: 0.81538
 * SVCs were determined to outperform Naive-Bayes in this specific classification problem with a much higher validation accuracy observed. 
 * However, the model still fails to generalise well when given inputs of similar semantics.
 ```text
-Validation Accuracy: 0.86721
+Validation Accuracy: 0.8599
 ```
 
 ### 4. SVC (TF-IDF Vectorizer + SMOTE)
 * Applying SMOTE to this model showed slight improvements in classification accuracy.
 * However, it still suffers from the same problems as the above few models.
 ```text
-Validation Accuracy: 0.88421
+Validation Accuracy: 0.8713
 ```
 
 
@@ -167,7 +119,7 @@ Validation Accuracy: 0.88421
 * Each word vector generated from the tokens are then averaged to form a sentence vector input for the SVC model.
 * Unexpectedly, there was a significant drop in accuracy compare to the previous model using TF-IDF.
 ```text
-Validation Accuracy: 0.81296
+Validation Accuracy: 0.8170
 ```
 
 ### 6. DistilBERT Transformer model
@@ -178,8 +130,18 @@ Validation Accuracy: 0.81296
 * It achieved the best accuracy compared to previous models and generalised well to unseen data with similar semantics, providing satisfactory predictions that fit within the taxonomy.
 * This was the model chosen for `BloomBERT`. 
 ```text
-Validation Accuracy: 0.91090
+Validation Accuracy: 0.9036
 ```
+
+### Concluding Thoughts
+
+Classifying Bloom’s taxonomy is a rather interesting problem with multiple potential approaches. In this work, `BloomBERT` solely demonstrates the efficacy of applying DistilBERT with a sequential classifier head on a multiclass classification task.
+
+However, tasks do not always fit neatly into a single Bloom’s category. This opens up the possibility of framing the problem as a multilabel classification task.
+
+Another interesting direction is to explore the `ordinal` or `hierarchical` structure of the taxonomy. Since Bloom’s levels are ranked in increasing cognitive complexity (e.g., `Create` > `Evaluate` > `Understand`), we could design models that respect this ordering. For instance, misclassifying a `Create` task as `Evaluate` is less severe than misclassifying it as `Remember`. Regularisation techniques or an ordinal regression formulation could enforce such constraints.
+
+These avenues present exciting opportunities for future research beyond the baseline demonstrated here.
 
 
 ## License
@@ -192,10 +154,9 @@ Source codes for model development are available under the MIT License. Develope
 
 ```
 @misc{BloomBERT,
-  author = {Ryan Lau},
+  author = {Ryan Lau Q. F.},
   title = {BloomBERT: A Task Complexity Classifier},
-  year = {2023},
+  year = {2025},
   howpublished = {\url{https://github.com/RyanLauQF/BloomBERT}}
 }
 ```
-
