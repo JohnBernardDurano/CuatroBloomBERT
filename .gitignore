@@ -160,3 +160,4 @@ cython_debug/
 .idea/
 model/bloombert_model.pt
 notebook_bloombert.ipynb
+*.csv
